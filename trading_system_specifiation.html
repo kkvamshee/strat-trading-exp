@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modular Strategy Trading System — Technical Specification v2.0</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #20242f;
+    --border: #2a2f3d;
+    --accent: #6c8fff;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #f59e0b;
+    --accent5: #f87171;
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --text-dim: #5a6478;
+    --code-bg: #141720;
+    --tag-buy: #0d2e1e;
+    --tag-buy-text: #34d399;
+    --tag-sell: #2e0f0f;
+    --tag-sell-text: #f87171;
+    --tag-info: #0d1f3c;
+    --tag-info-text: #6c8fff;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f8f9fc;
+      --surface: #ffffff;
+      --surface2: #f1f3f8;
+      --border: #dde1ec;
+      --accent: #3b5bdb;
+      --accent2: #7c3aed;
+      --accent3: #059669;
+      --accent4: #d97706;
+      --accent5: #dc2626;
+      --text: #1e2433;
+      --text-muted: #556070;
+      --text-dim: #8896a8;
+      --code-bg: #f0f2f8;
+      --tag-buy: #d1fae5;
+      --tag-buy-text: #065f46;
+      --tag-sell: #fee2e2;
+      --tag-sell-text: #991b1b;
+      --tag-info: #dbeafe;
+      --tag-info-text: #1e40af;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 270px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 24px 0;
+  }
+  .sidebar-logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo .logo-mark {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .sidebar nav { padding: 0 8px; }
+  .nav-section { margin-bottom: 4px; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 12px 4px;
+  }
+  .nav-section a {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-section a:hover { background: var(--surface2); color: var(--text); }
+  .nav-section a.active { background: var(--tag-info); color: var(--accent); font-weight: 500; }
+  .main { flex: 1; min-width: 0; }
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--tag-info);
+    color: var(--tag-info-text);
+  }
+  .badge.green { background: var(--tag-buy); color: var(--tag-buy-text); }
+  .badge.purple { background: #2d184c; color: var(--accent2); }
+  .badge.amber { background: #2e1f00; color: var(--accent4); }
+  .header h1 { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .header-sub { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+  .content { padding: 40px 48px; max-width: 980px; }
+
+  /* Typography */
+  h2 { font-size: 20px; font-weight: 700; margin: 48px 0 16px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--text); }
+  h2:first-child { margin-top: 0; border-top: none; }
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; color: var(--accent); }
+  h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 8px; color: var(--text-muted); }
+  p { margin-bottom: 12px; color: var(--text); }
+  ul, ol { margin: 8px 0 16px 20px; }
+  li { margin-bottom: 4px; color: var(--text); }
+  li::marker { color: var(--text-dim); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { font-weight: 600; color: var(--text); }
+
+  /* Callout boxes */
+  .callout {
+    border-left: 3px solid;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .callout.info { border-color: var(--accent); background: var(--tag-info); color: var(--tag-info-text); }
+  .callout.warn { border-color: var(--accent4); background: #2e1f00; color: var(--accent4); }
+  .callout.success { border-color: var(--accent3); background: var(--tag-buy); color: var(--tag-buy-text); }
+  .callout.danger { border-color: var(--accent5); background: var(--tag-sell); color: var(--tag-sell-text); }
+  .callout strong { color: inherit; }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    font-size: 13px;
+    color: var(--accent3);
+  }
+  pre code { color: var(--text); }
+  .kw { color: var(--accent2); }
+  .cm { color: var(--text-dim); font-style: italic; }
+  .st { color: var(--accent3); }
+  .ty { color: var(--accent4); }
+  .nu { color: #f97316; }
+  .fn { color: var(--accent); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--surface2); }
+  th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  td code { background: var(--code-bg); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* Module cards */
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 20px 0; }
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .module-card .card-icon { font-size: 22px; margin-bottom: 8px; }
+  .module-card h4 { margin: 0 0 6px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; }
+  .module-card p { font-size: 13px; color: var(--text-muted); margin: 0; }
+  .module-card .card-tag { margin-top: 10px; display: inline-block; }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .arch-diagram pre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .arch-diagram pre .highlight { color: var(--accent3); font-weight: bold; }
+  .arch-diagram pre .accent { color: var(--accent); font-weight: bold; }
+  .arch-diagram pre .purple { color: var(--accent2); font-weight: bold; }
+  .arch-diagram pre .amber { color: var(--accent4); font-weight: bold; }
+  .arch-diagram pre .arrow { color: var(--accent); }
+
+  /* Schema blocks */
+  .schema-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 12px 0 20px;
+  }
+  .schema-header {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .schema-header span.entity { color: var(--accent4); }
+  .schema-block pre { border: none; border-radius: 0 0 8px 8px; margin: 0; }
+
+  /* Phase timeline */
+  .phase { display: flex; gap: 16px; margin: 12px 0; align-items: flex-start; }
+  .phase-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .phase-body h4 { margin-top: 0; color: var(--text); font-size: 14px; text-transform: none; letter-spacing: 0; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* Tag pills */
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .pill.blue { background: var(--tag-info); color: var(--tag-info-text); }
+  .pill.green { background: var(--tag-buy); color: var(--tag-buy-text); }
+  .pill.red { background: var(--tag-sell); color: var(--tag-sell-text); }
+  .pill.amber { background: #2e1f00; color: var(--accent4); }
+  .pill.purple { background: #2d184c; color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Strat Trading Exp</div>
+    <h1>Technical Spec v2.0</h1>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-section-label">Architecture</div>
+      <a href="#overview">1. System Overview</a>
+      <a href="#design-evolution">2. v2.0 Architecture Updates</a>
+      <a href="#architecture">3. System Topology Diagram</a>
+      <a href="#execution-modes">4. Execution Modes</a>
+      <a href="#modules">5. Module Catalog</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Core Modules</div>
+      <a href="#mod-coinbase">6. Coinbase Connector</a>
+      <a href="#mod-brain">7. Strategy Brain (Unified)</a>
+      <a href="#mod-strategies">8. Strategy Framework &amp; Jev</a>
+      <a href="#mod-replay">9. Historical Replay Engine</a>
+      <a href="#mod-paper">10. Multi-Portfolio Simulator</a>
+      <a href="#mod-executor">11. Order Executor (Live)</a>
+      <a href="#mod-tracker">12. Performance Comparator</a>
+      <a href="#mod-monitor">13. Monitor &amp; Alerts</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Data Schemas</div>
+      <a href="#schema-market">14. Market Data Schema</a>
+      <a href="#schema-brain">15. Brain &amp; Strategy Schemas</a>
+      <a href="#schema-trade">16. Trades &amp; Runs Schema</a>
+      <a href="#schema-portfolio">17. Portfolio &amp; Snapshots</a>
+      <a href="#storage">18. Storage &amp; Partitioning</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Operations</div>
+      <a href="#cli-usage">19. CLI &amp; Running Modes</a>
+      <a href="#config">20. Configuration</a>
+      <a href="#project-structure">21. Project Structure</a>
+      <a href="#testing">22. Testing Strategy</a>
+      <a href="#libs">23. Library Index</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+  <div class="header">
+    <div class="header-meta">
+      <span class="badge purple">v2.0 Approved Spec</span>
+      <span class="badge green">Multi-Strategy Engine</span>
+      <span class="badge blue">Unified Brain Architecture</span>
+      <span class="badge amber">Historical Replay Capable</span>
+    </div>
+    <h1>Modular Strategy Trading System</h1>
+    <div class="header-sub">Technical Specification — Unified Brain, Multi-Strategy Testing (Jev + Quantitative), Historical Replay &amp; Paper/Live Execution</div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <h2 id="overview">1. System Overview</h2>
+    <p>The <strong>Modular Strategy Trading System</strong> is a high-performance, developer-friendly trading platform built in Python 3.11+. It streams real-time market data from Coinbase, aggregates market structure, evaluates customizable trading strategies, enforces strict risk limits, and executes orders via a high-fidelity paper trading simulator or live Coinbase APIs.</p>
+    <p>The system is architected for dual-mode operation:</p>
+    <ul>
+      <li><strong>Live / Paper Streaming Mode:</strong> Ingests live ticks and candles via Coinbase WebSocket, continually running decision cycles in real-time.</li>
+      <li><strong>Historical Replay / Backtesting Mode:</strong> Starts at any arbitrary point in time (e.g. <code>--start-time "2 days ago"</code>), fetching missing historical candles on demand, replaying them through the engine, and testing multiple strategies side-by-side on identical historical data.</li>
+    </ul>
+
+    <!-- ARCHITECTURE UPDATES -->
+    <h2 id="design-evolution">2. v2.0 Architecture Updates &amp; Key Decisions</h2>
+
+    <div class="callout success">
+      <strong>Three Key Architectural Changes in v2.0:</strong>
+      <ol style="margin-top: 8px;">
+        <li><strong>Unified Strategy Brain:</strong> The previously separate <em>State Builder</em>, <em>Decision Engine</em>, and <em>Risk Manager</em> modules are condensed into a single, cohesive <code>StrategyBrain</code> component for the initial phase. This removes IPC latency, simplifies testing, eliminates circular data synchronization, and makes historical replay trivial. (The component maintains clean internal functional boundaries so it can be split into distributed microservices when scaling later).</li>
+        <li><strong>Pluggable Multi-Strategy Framework:</strong> The platform is decoupled from any single decision model. <strong>Jev (TypeSafe AI)</strong> is implemented as a first-class strategy plug-in alongside technical and quantitative baselines (e.g., EMA Trend, MACD Divergence, RSI Mean-Reversion). Any number of strategies can be defined, loaded, and compared.</li>
+        <li><strong>Arbitrary Historical Replay &amp; Comparison:</strong> The engine can be initialized with any <code>start_time</code> in the past. It fetches and caches required candle history, simulates execution without lookahead bias, tracks independent virtual portfolios per strategy, and outputs side-by-side comparative performance metrics.</li>
+      </ol>
+    </div>
+
+    <!-- ARCHITECTURE DIAGRAM -->
+    <h2 id="architecture">3. System Topology Diagram</h2>
+    <div class="arch-diagram">
+<pre>
+   ┌────────────────────────────────────────────────────────┐
+   │               COINBASE MARKET DATA INGESTION           │
+   │  WebSocket (Live Ticks &amp; Candles)  │  REST API (Gap-fill &amp; Replay History)
+   └───────────────────────────┬────────────────────────────┘
+                               │
+                               ▼
+   ┌────────────────────────────────────────────────────────┐
+   │                  SQLITE PERSISTENCE LAYER              │
+   │     candles  │  raw_ticks  │  decisions  │  trades     │
+   └───────────────────────────┬────────────────────────────┘
+                               │
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+   ┌───────────────────────────────┐     ┌────────────────────────────────┐
+   │   LIVE / PAPER STREAM LOOP    │     │    HISTORICAL REPLAY RUNNER    │
+   │   Ticks arrive via WebSocket  │     │   Iterates from --start-time   │
+   │   Fires on interval / candle  │     │   Steps forward candle-by-candle
+   └───────────────┬───────────────┘     └────────────────┬───────────────┘
+                   │                                      │
+                   └──────────────────┬───────────────────┘
+                                      │
+                                      ▼
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │                    UNIFIED STRATEGY BRAIN                            │
+   │  ┌────────────────────────────────────────────────────────────────┐  │
+   │  │ 1. State &amp; Feature Computation (RSI, MACD, BBands, VWAP, etc.) │  │
+   │  └───────────────────────────────┬────────────────────────────────┘  │
+   │                                  ▼                                   │
+   │  ┌────────────────────────────────────────────────────────────────┐  │
+   │  │ 2. Strategy Dispatch (Pluggable BaseStrategy Interface)        │  │
+   │  │    ├─ JevStrategy (TypeSafe AI System One)                     │  │
+   │  │    ├─ EmaMacdStrategy (Rule-based Trend Follower)              │  │
+   │  │    └─ CustomStrategy (User-defined algorithms)                 │  │
+   │  └───────────────────────────────┬────────────────────────────────┘  │
+   │                                  ▼                                   │
+   │  ┌────────────────────────────────────────────────────────────────┐  │
+   │  │ 3. Deterministic Risk Gate (Size, Loss Cap, Cooldown, Limits)  │  │
+   │  └───────────────────────────────┬────────────────────────────────┘  │
+   └──────────────────────────────────┼───────────────────────────────────┘
+                                      │ Approved Orders &amp; Sizing
+                   ┌──────────────────┴───────────────────┐
+                   ▼                                      ▼
+   ┌───────────────────────────────┐      ┌───────────────────────────────┐
+   │   PAPER TRADING SIMULATOR     │      │     LIVE ORDER EXECUTOR       │
+   │  Virtual balance &amp; slippage   │      │   Coinbase REST Order API     │
+   │  Multi-strategy portfolio map │      │   Real capital &amp; safeguards   │
+   └───────────────┬───────────────┘      └───────────────┬───────────────┘
+                   │                                      │
+                   └──────────────────┬───────────────────┘
+                                      ▼
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │              PERFORMANCE TRACKER &amp; COMPARISON ENGINE                 │
+   │   P&amp;L, Win Rate, Max Drawdown, Sharpe Ratio, Multi-Strategy Leaderboard
+   └──────────────────────────────────┬───────────────────────────────────┘
+                                      ▼
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │               TERMINAL MONITOR &amp; WATCHDOG (Rich UI)                  │
+   └──────────────────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+
+    <!-- EXECUTION MODES -->
+    <h2 id="execution-modes">4. Execution Modes</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mode</th><th>CLI Invocation</th><th>Data Source</th><th>Execution Target</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Historical Replay (Backtest)</strong></td>
+            <td><code>python main.py replay --start-time "2d" --strategies jev,ema_trend</code></td>
+            <td>SQLite candles + Coinbase REST backfill</td>
+            <td>Multi-portfolio Paper Simulator</td>
+            <td>Backtesting and comparing strategies over historical periods without waiting.</td>
+          </tr>
+          <tr>
+            <td><strong>Replay + Stream (Catch-up)</strong></td>
+            <td><code>python main.py stream --catchup-from "12h" --strategy jev</code></td>
+            <td>REST backfill &rarr; Live WebSocket</td>
+            <td>Paper or Live Executor</td>
+            <td>Warms up state over recent hours, then seamlessly continues streaming live.</td>
+          </tr>
+          <tr>
+            <td><strong>Paper Streaming</strong></td>
+            <td><code>python main.py stream --mode paper --strategy jev</code></td>
+            <td>Live Coinbase WebSocket</td>
+            <td>Virtual Paper Portfolio</td>
+            <td>Real-time forward testing with live price discovery and simulated slippage.</td>
+          </tr>
+          <tr>
+            <td><strong>Live Production</strong></td>
+            <td><code>python main.py stream --mode live --strategy jev</code></td>
+            <td>Live Coinbase WebSocket</td>
+            <td>Coinbase Advanced Trade API</td>
+            <td>Live execution with hard-coded risk caps and circuit breakers.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MODULE CATALOG -->
+    <h2 id="modules">5. Module Catalog</h2>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="card-icon">🔌</div>
+        <h4>Coinbase Connector</h4>
+        <p>WebSocket tick/candle streaming and REST client for gap-filling and deep historical replay backfills.</p>
+        <span class="badge card-tag blue">Data Ingestion</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">🧠</div>
+        <h4>Strategy Brain (Unified)</h4>
+        <p>Single component packaging State/Feature generation, Strategy dispatch, and Deterministic Risk controls.</p>
+        <span class="badge card-tag purple">Decision Engine</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">🧩</div>
+        <h4>Strategy Framework &amp; Jev</h4>
+        <p>Abstract <code>BaseStrategy</code> interface. Includes <code>JevStrategy</code> (TypeSafe AI) and quantitative baselines.</p>
+        <span class="badge card-tag green">Strategy Layer</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">⏪</div>
+        <h4>Historical Replay Engine</h4>
+        <p>Executes historical backtests from any arbitrary <code>start_time</code>. Simulates multiple strategies side-by-side.</p>
+        <span class="badge card-tag amber">Backtesting</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">🧪</div>
+        <h4>Multi-Portfolio Paper Engine</h4>
+        <p>Simulates fills with fees and slippage. Supports isolated virtual portfolios for comparing multiple strategies.</p>
+        <span class="badge card-tag blue">Execution</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">⚡</div>
+        <h4>Live Order Executor</h4>
+        <p>Places real market orders via Coinbase REST. Enforces position limits, idempotency, and error circuit breakers.</p>
+        <span class="badge card-tag amber">Live Trading</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">📊</div>
+        <h4>Performance Comparator</h4>
+        <p>Calculates Win Rate, Total P&amp;L, Drawdown, Sharpe, and side-by-side strategy comparison leaderboards.</p>
+        <span class="badge card-tag purple">Analytics</span>
+      </div>
+      <div class="module-card">
+        <div class="card-icon">🖥️</div>
+        <h4>Monitor &amp; Alerts</h4>
+        <p>Terminal UI built with <code>rich</code>. Real-time updates, heartbeat watchdog, Telegram alerts, and crash logging.</p>
+        <span class="badge card-tag green">Operations</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- MODULE: COINBASE CONNECTOR -->
+    <h2 id="mod-coinbase">6. Module: Coinbase Connector &amp; Data Feeds</h2>
+    <p><strong>File:</strong> <code>src/coinbase_connector.py</code><br>
+    <strong>Libraries:</strong> <code>coinbase-advanced-py</code>, <code>httpx</code>, <code>asyncio</code><br>
+    <strong>Modes:</strong> Live Streaming &amp; Historical Backfill</p>
+
+    <h3>Responsibilities</h3>
+    <ul>
+      <li>Maintain resilient WebSocket connection to Coinbase Advanced Trade (<code>wss://advanced-trade-ws.coinbase.com</code>).</li>
+      <li>Subscribe to <code>ticker</code> and <code>candles</code> channels for designated trading pairs (e.g., <code>BTC-USD</code>).</li>
+      <li>Aggregate raw ticks into 1-minute OHLCV candles; flush completed candles to SQLite.</li>
+      <li><strong>Historical Data Provider:</strong> Provide <code>fetch_historical_candles(pair, start_time, end_time)</code> with automatic pagination (300 candles per REST request) to satisfy any replay start time requested by the user.</li>
+      <li><strong>Automatic Gap-filling:</strong> On startup or reconnect, detect missing candles between last DB timestamp and current time, backfilling via REST before resuming feed.</li>
+    </ul>
+
+    <h3>Historical Fetching &amp; Gap-Fill Logic</h3>
+    <pre><code><span class="kw">async def</span> <span class="fn">ensure_candles_available</span>(pair: <span class="ty">str</span>, start_ts: <span class="ty">float</span>, end_ts: <span class="ty">float</span>, db: Database):
+    <span class="cm"># Check existing coverage in SQLite</span>
+    missing_ranges = db.<span class="fn">find_missing_candle_ranges</span>(pair, start_ts, end_ts, granularity=<span class="nu">60</span>)
+    
+    <span class="kw">for</span> range_start, range_end <span class="kw">in</span> missing_ranges:
+        logger.<span class="fn">info</span>(<span class="st">f"Backfilling {pair} from {range_start} to {range_end} via Coinbase REST"</span>)
+        curr = range_start
+        <span class="kw">while</span> curr &lt; range_end:
+            batch_end = min(curr + (<span class="nu">300</span> * <span class="nu">60</span>), range_end)
+            candles = <span class="kw">await</span> rest_client.<span class="fn">get_candles</span>(pair, start=curr, end=batch_end, granularity=<span class="st">"ONE_MINUTE"</span>)
+            db.<span class="fn">insert_candles</span>(candles, source=<span class="st">"rest_backfill"</span>)
+            curr = batch_end
+            <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">0.1</span>) <span class="cm"># Rate-limit safety</span></code></pre>
+
+    <hr class="divider">
+
+    <!-- MODULE: UNIFIED STRATEGY BRAIN -->
+    <h2 id="mod-brain">7. Module: Strategy Brain (Unified Component)</h2>
+    <p><strong>File:</strong> <code>src/brain.py</code><br>
+    <strong>Subsumes:</strong> State Builder + Strategy Evaluator + Risk Manager<br>
+    <strong>Design Rationale:</strong> In v1.0, state building, decision making, and risk management were separated into 3 disparate components. In v2.0, they are condensed into <strong>one unified Brain component</strong> for clean local execution, effortless unit testing, and ultra-fast historical replay. When the system scales to distributed production, the internal pipeline methods can be exposed as microservices with zero architectural friction.</p>
+
+    <h3>Internal Brain Pipeline</h3>
+    <div class="arch-diagram">
+<pre>
+   Inputs: (Current Timestamp T, Candle History Buffer, Active Portfolio)
+      │
+      ▼
+   ┌────────────────────────────────────────────────────────┐
+   │ STEP 1: COMPUTE MARKET STATE &amp; FEATURES                │
+   │ - RSI(14), MACD(12,26,9), Bollinger Bands(20,2)        │
+   │ - ATR(14) volatility regime, VWAP, EMA(9, 21, 50)      │
+   │ - Multi-window momentum (5m, 15m, 1h), Volume ratio    │
+   │ Output: MarketState Model                              │
+   └──────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+   ┌────────────────────────────────────────────────────────┐
+   │ STEP 2: DISPATCH TO ACTIVE STRATEGY                    │
+   │ - Strategy evaluates MarketState                       │
+   │ - Generates raw signal: action (buy/sell/hold),        │
+   │   conviction (0-10), risk_level (0-10), rationale      │
+   │ Output: RawStrategySignal                              │
+   └──────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+   ┌────────────────────────────────────────────────────────┐
+   │ STEP 3: DETERMINISTIC RISK FILTER &amp; ORDER SIZING       │
+   │ - Check 1: Conviction >= min_conviction (e.g. 6.0)     │
+   │ - Check 2: Risk score <= max_risk (e.g. 7.0)           │
+   │ - Check 3: Daily loss cap not breached                 │
+   │ - Check 4: Cooldown period expired (e.g. 5 min)        │
+   │ - Check 5: Position availability (no double buy)       │
+   │ - Check 6: Sizing calculator (fixed USD or % equity)   │
+   │ Output: EvaluationResult (Approved / Blocked + Order)  │
+   └────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+
+    <h3>Component Interface</h3>
+    <pre><code><span class="kw">class</span> <span class="ty">StrategyBrain</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, strategy: BaseStrategy, risk_config: RiskConfig, feature_config: FeatureConfig):
+        self.strategy = strategy
+        self.risk_config = risk_config
+        self.feature_config = feature_config
+
+    <span class="kw">async def</span> <span class="fn">evaluate</span>(
+        self,
+        pair: <span class="ty">str</span>,
+        timestamp: <span class="ty">datetime</span>,
+        candles_df: pd.DataFrame,
+        portfolio: PortfolioSnapshot
+    ) -&gt; EvaluationResult:
+        <span class="cm"># 1. Feature computation</span>
+        state: MarketState = self.<span class="fn">build_market_state</span>(pair, timestamp, candles_df)
+        
+        <span class="cm"># 2. Strategy evaluation</span>
+        raw_signal: StrategySignal = <span class="kw">await</span> self.strategy.<span class="fn">generate_signal</span>(state, portfolio)
+        
+        <span class="cm"># 3. Deterministic risk rules</span>
+        risk_result: RiskDecision = self.<span class="fn">apply_risk_rules</span>(raw_signal, portfolio, timestamp)
+        
+        <span class="kw">return</span> EvaluationResult(
+            timestamp=timestamp,
+            state=state,
+            signal=raw_signal,
+            risk=risk_result,
+            order_intent=self.<span class="fn">compute_order_intent</span>(raw_signal, risk_result, portfolio)
+        )</code></pre>
+
+    <hr class="divider">
+
+    <!-- MODULE: STRATEGY FRAMEWORK & JEV -->
+    <h2 id="mod-strategies">8. Module: Strategy Framework &amp; Jev Integration</h2>
+    <p><strong>Directory:</strong> <code>src/strategies/</code><br>
+    <strong>Core Principle:</strong> Jev is one strategy option among many. The platform supports testing and running any number of quantitative, rule-based, or AI-driven strategies under a unified interface.</p>
+
+    <h3>Base Strategy Interface</h3>
+    <pre><code><span class="kw">class</span> <span class="ty">BaseStrategy</span>(ABC):
+    strategy_id: <span class="ty">str</span>
+    name: <span class="ty">str</span>
+    parameters: <span class="ty">dict</span>
+
+    <span class="kw">@abstractmethod</span>
+    <span class="kw">async def</span> <span class="fn">generate_signal</span>(
+        self,
+        state: MarketState,
+        portfolio: PortfolioSnapshot
+    ) -&gt; StrategySignal:
+        <span class="st">"""Generates action, conviction (0-10), risk_level (0-10), and rationale."""</span>
+        <span class="kw">pass</span></code></pre>
+
+    <h3>Built-in Strategies</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Strategy Class</th><th>Strategy ID</th><th>Type</th><th>Logic / Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>JevStrategy</code></td>
+            <td><code>jev_system_one</code></td>
+            <td>TypeSafe AI Model</td>
+            <td>Formats dense market state JSON. Queries TypeSafe API (Choice, Score, Noul) for typed action, conviction score, and trend regime.</td>
+          </tr>
+          <tr>
+            <td><code>EmaMacdStrategy</code></td>
+            <td><code>ema_macd_trend</code></td>
+            <td>Quantitative Rule</td>
+            <td>Trend-following baseline: buys when EMA9 &gt; EMA21 and MACD histogram turns positive; sells on reversal. Useful for no-cost benchmark.</td>
+          </tr>
+          <tr>
+            <td><code>RsiBollingerStrategy</code></td>
+            <td><code>rsi_bb_reversion</code></td>
+            <td>Quantitative Rule</td>
+            <td>Mean-reversion baseline: buys when RSI &lt; 30 and price touches lower Bollinger Band; sells when RSI &gt; 70 or hits upper band.</td>
+          </tr>
+          <tr>
+            <td><code>CustomStrategy</code></td>
+            <td><code>user_defined</code></td>
+            <td>Plugin</td>
+            <td>User-defined algorithmic or machine-learning strategy implementing <code>BaseStrategy</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Jev Strategy Implementation Specifics</h3>
+    <p>When <code>JevStrategy</code> is active, it formats the <code>MarketState</code> and sends typed queries to TypeSafe AI:</p>
+    <pre><code><span class="kw">from</span> typesafe <span class="kw">import</span> TypeSafeClient, Choice, Score, Noul
+
+questions = [
+    <span class="fn">Choice</span>(
+        name=<span class="st">"action"</span>,
+        options=[<span class="st">"buy"</span>, <span class="st">"sell"</span>, <span class="st">"hold"</span>],
+        description=<span class="st">"Given the current crypto technical state, what trading action should be taken?"</span>
+    ),
+    <span class="fn">Score</span>(
+        name=<span class="st">"conviction"</span>,
+        min=<span class="nu">0</span>, max=<span class="nu">10</span>,
+        description=<span class="st">"Confidence in the directional signal: 0=pure noise, 10=highest confidence"</span>
+    ),
+    <span class="fn">Noul</span>(
+        name=<span class="st">"is_trending"</span>,
+        description=<span class="st">"Is price in a clear directional breakout vs ranging chop?"</span>
+    ),
+    <span class="fn">Score</span>(
+        name=<span class="st">"risk_level"</span>,
+        min=<span class="nu">0</span>, max=<span class="nu">10</span>,
+        description=<span class="st">"Perceived trade execution risk right now: 0=minimal, 10=extreme"</span>
+    )
+]</code></pre>
+
+    <hr class="divider">
+
+    <!-- MODULE: HISTORICAL REPLAY ENGINE -->
+    <h2 id="mod-replay">9. Module: Historical Replay &amp; Comparison Engine</h2>
+    <p><strong>File:</strong> <code>src/replay_engine.py</code><br>
+    <strong>Capabilities:</strong> Start at any historical time (e.g. 2 days ago, 1 month ago); replay multiple strategies across the exact same candle stream; zero forward lookahead bias.</p>
+
+    <h3>Replay Workflow</h3>
+    <div class="phase">
+      <div class="phase-num">1</div>
+      <div class="phase-body">
+        <h4>Parse Replay Target &amp; Validate Data</h4>
+        <p>User specifies <code>--start-time "2026-09-25T00:00:00Z"</code> (or relative <code>--start-time 2d</code>) and strategies to test (e.g. <code>--strategies jev,ema_macd,rsi_bb</code>). The Replay Engine verifies SQLite has all 1m candles for <code>[start_time - lookback_buffer, end_time]</code>. If not, it requests the gap from Coinbase REST.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">2</div>
+      <div class="phase-body">
+        <h4>Initialize Isolated Virtual Portfolios</h4>
+        <p>A separate <code>PaperPortfolio</code> instance with identical starting cash (e.g. $10,000) is initialized for each strategy being evaluated under a unique <code>run_id</code>.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">3</div>
+      <div class="phase-body">
+        <h4>Step-by-Step Simulation (No Lookahead Bias)</h4>
+        <p>The engine advances through timestamps at the configured interval (e.g., 60 seconds). At each step <code>T</code>:</p>
+        <ul>
+          <li>A strict historical slice <code>[T - 200 candles : T]</code> is passed to the <code>StrategyBrain</code>. Under no circumstances can indicators see candles at <code>&gt; T</code>.</li>
+          <li>For each strategy, the Brain evaluates the state and risk rules.</li>
+          <li>If an order is approved, the <code>PaperTradingEngine</code> fills the trade at candle close / ticker price at timestamp <code>T</code> with simulated taker fee (0.6%) and spread slippage (0.05%).</li>
+          <li>Portfolio values and trade metrics are recorded with the strategy's <code>run_id</code>.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">4</div>
+      <div class="phase-body">
+        <h4>Generate Comparative Benchmark Leaderboard</h4>
+        <p>Outputs a rich Markdown/terminal table comparing Win Rate, Cumulative Return, Max Drawdown, Sharpe Ratio, Profit Factor, and Total Fees across all tested strategies.</p>
+      </div>
+    </div>
+
+    <pre><code><span class="cm"># Running a comparative replay from CLI</span>
+$ python main.py replay \
+    --pair BTC-USD \
+    --start-time "2d" \
+    --strategies "jev,ema_macd_trend,rsi_bb_reversion" \
+    --initial-cash 10000</code></pre>
+
+    <hr class="divider">
+
+    <!-- MODULE: PAPER TRADING SIMULATOR -->
+    <h2 id="mod-paper">10. Module: Multi-Portfolio Paper Simulator</h2>
+    <p><strong>File:</strong> <code>src/paper_engine.py</code><br>
+    <strong>Responsibility:</strong> Manages isolated virtual balance sheets for any active strategy run.</p>
+
+    <h3>Key Capabilities</h3>
+    <ul>
+      <li><strong>Multi-tenant Portfolio Support:</strong> Maintains separate virtual cash, coin balances, average entry prices, and high-water marks keyed by <code>(strategy_id, run_id)</code>.</li>
+      <li><strong>Realistic Cost Modeling:</strong> Applies configurable taker fee (default 0.60%) and realistic bid-ask slippage (default 0.05%).</li>
+      <li><strong>Order Rejection Guardrails:</strong> Rejects BUY orders if virtual cash is insufficient; rejects SELL orders if coin quantity is 0.</li>
+      <li><strong>Persistence:</strong> Immediately persists all simulated trades and portfolio snapshots to SQLite so tests can be paused, analyzed, or resumed.</li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- MODULE: LIVE ORDER EXECUTOR -->
+    <h2 id="mod-executor">11. Module: Order Executor (Live Mode)</h2>
+    <p><strong>File:</strong> <code>src/order_executor.py</code><br>
+    <strong>Library:</strong> <code>coinbase-advanced-py</code> (RESTClient)<br>
+    <strong>Safety Status:</strong> Hard deterministic safeguards enforced by Python code (independent of strategy models).</p>
+
+    <h3>Safeguards</h3>
+    <ul>
+      <li><strong>Max Order Size Cap:</strong> Strict absolute dollar ceiling per trade (e.g. $100 micro-live limit).</li>
+      <li><strong>Daily Loss Limit Circuit Breaker:</strong> If realized + unrealized daily loss exceeds 3%, all trading is halted for the calendar day.</li>
+      <li><strong>Pending Order Lock:</strong> Will not place a new order if an existing order for the coin pair is in <code>PENDING</code> status.</li>
+      <li><strong>No Automatic Retries:</strong> Any API order error causes an immediate log and skip to prevent double-spending loops.</li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- MODULE: PERFORMANCE COMPARATOR -->
+    <h2 id="mod-tracker">12. Module: Performance Tracker &amp; Comparator</h2>
+    <p><strong>File:</strong> <code>src/performance_tracker.py</code><br>
+    <strong>Responsibility:</strong> Aggregates metrics for single runs and generates comparative leaderboards across strategies.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Calculation</th><th>Analytical Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Total Return (%)</strong></td><td><code>(End Portfolio Value - Start Capital) / Start Capital * 100</code></td><td>Bottom-line profitability</td></tr>
+          <tr><td><strong>Win Rate (%)</strong></td><td><code>Winning Trades / Total Closed Trades * 100</code></td><td>Accuracy of directional signals</td></tr>
+          <tr><td><strong>Profit Factor</strong></td><td><code>Gross Profits / Gross Losses</code></td><td>Payoff ratio efficiency (&gt; 1.5 is healthy)</td></tr>
+          <tr><td><strong>Max Drawdown</strong></td><td><code>Max((Peak Value - Trough Value) / Peak Value) * 100</code></td><td>Worst-case downside risk</td></tr>
+          <tr><td><strong>Sharpe / Sortino</strong></td><td>Mean excess return / downside deviation</td><td>Risk-adjusted returns</td></tr>
+          <tr><td><strong>Conviction Correlation</strong></td><td><code>Corr(Strategy Conviction, Trade PnL)</code></td><td>Determines if confidence scores are calibrated</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- MODULE: MONITOR & ALERTS -->
+    <h2 id="mod-monitor">13. Module: Monitor &amp; Alerts</h2>
+    <p><strong>File:</strong> <code>src/monitor.py</code><br>
+    <strong>Libraries:</strong> <code>rich</code>, <code>loguru</code></p>
+    <ul>
+      <li><strong>Live Terminal Dashboard:</strong> Displays real-time WebSocket ticker price, active strategy conviction, risk status, virtual P&amp;L, and recent trades.</li>
+      <li><strong>Replay Progress Bar:</strong> Displays ETA, simulated date/time, and running P&amp;L during historical backtesting runs.</li>
+      <li><strong>Heartbeat Watchdog:</strong> Dispatches automatic reconnect if Coinbase WebSocket heartbeats lapse for &gt; 30 seconds.</li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- DATA SCHEMAS -->
+    <h2 id="schema-market">14. Data Schema: Market Data</h2>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> candles (1-minute OHLCV)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> candles (
+    id          <span class="ty">INTEGER</span>  PRIMARY KEY AUTOINCREMENT,
+    pair        <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- e.g. "BTC-USD"</span>
+    timestamp   <span class="ty">REAL</span>     NOT NULL,              <span class="cm">-- Candle open Unix timestamp (UTC)</span>
+    open        <span class="ty">REAL</span>     NOT NULL,
+    high        <span class="ty">REAL</span>     NOT NULL,
+    low         <span class="ty">REAL</span>     NOT NULL,
+    close       <span class="ty">REAL</span>     NOT NULL,
+    volume      <span class="ty">REAL</span>     NOT NULL,
+    source      <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "websocket" | "rest_backfill"</span>
+    created_at  <span class="ty">TEXT</span>     DEFAULT (datetime(<span class="st">'now'</span>))
+);
+<span class="kw">CREATE UNIQUE INDEX</span> idx_candles_pair_ts <span class="kw">ON</span> candles (pair, timestamp);</code></pre>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> raw_ticks (WebSocket Stream)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> raw_ticks (
+    id          <span class="ty">INTEGER</span>  PRIMARY KEY AUTOINCREMENT,
+    pair        <span class="ty">TEXT</span>     NOT NULL,
+    timestamp   <span class="ty">REAL</span>     NOT NULL,
+    price       <span class="ty">REAL</span>     NOT NULL,
+    volume_24h  <span class="ty">REAL</span>,
+    best_bid    <span class="ty">REAL</span>,
+    best_ask    <span class="ty">REAL</span>,
+    created_at  <span class="ty">TEXT</span>     DEFAULT (datetime(<span class="st">'now'</span>))
+);
+<span class="kw">CREATE INDEX</span> idx_raw_ticks_pair_ts <span class="kw">ON</span> raw_ticks (pair, timestamp);</code></pre>
+    </div>
+
+    <hr class="divider">
+
+    <h2 id="schema-brain">15. Data Schema: Brain &amp; Strategy Schemas</h2>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">PYDANTIC MODEL</span> MarketState (Computed Features)</div>
+      <pre><code><span class="kw">class</span> <span class="ty">MarketState</span>(BaseModel):
+    pair:            <span class="ty">str</span>
+    timestamp:       <span class="ty">datetime</span>
+    current_price:   <span class="ty">float</span>
+    change_5m_pct:   <span class="ty">float</span>
+    change_15m_pct:  <span class="ty">float</span>
+    change_1h_pct:   <span class="ty">float</span>
+    rsi_14:          <span class="ty">float</span>
+    macd:            <span class="ty">float</span>
+    macd_signal:     <span class="ty">float</span>
+    macd_hist:       <span class="ty">float</span>
+    bb_percent:      <span class="ty">float</span>         <span class="cm"># 0.0=lower band, 1.0=upper band</span>
+    atr_14:          <span class="ty">float</span>
+    atr_regime:      <span class="ty">Literal</span>[<span class="st">"low"</span>, <span class="st">"medium"</span>, <span class="st">"high"</span>]
+    ema_9:           <span class="ty">float</span>
+    ema_21:          <span class="ty">float</span>
+    ema_50:          <span class="ty">float</span>
+    vwap:            <span class="ty">float</span>
+    volume_ratio:    <span class="ty">float</span>         <span class="cm"># current vs 20-bar rolling average</span>
+    candle_count:    <span class="ty">int</span></code></pre>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">PYDANTIC MODEL</span> StrategySignal</div>
+      <pre><code><span class="kw">class</span> <span class="ty">StrategySignal</span>(BaseModel):
+    strategy_id:     <span class="ty">str</span>           <span class="cm"># e.g. "jev_system_one", "ema_macd_trend"</span>
+    action:          <span class="ty">Literal</span>[<span class="st">"buy"</span>, <span class="st">"sell"</span>, <span class="st">"hold"</span>]
+    conviction:      <span class="ty">float</span>         <span class="cm"># 0.0 to 10.0</span>
+    risk_level:      <span class="ty">float</span>         <span class="cm"># 0.0 to 10.0</span>
+    is_trending:     <span class="ty">Optional</span>[<span class="ty">bool</span>]
+    rationale:       <span class="ty">Optional</span>[<span class="ty">str</span>]
+    latency_ms:      <span class="ty">float</span>
+    raw_response:    <span class="ty">Optional</span>[<span class="ty">dict</span>]</code></pre>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> decisions (Audit Trail)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> decisions (
+    id              <span class="ty">INTEGER</span>  PRIMARY KEY AUTOINCREMENT,
+    run_id          <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- Group decisions by session/backtest run</span>
+    strategy_id     <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "jev_system_one", "ema_macd", etc.</span>
+    pair            <span class="ty">TEXT</span>     NOT NULL,
+    timestamp       <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- ISO 8601 UTC</span>
+    market_state    <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- JSON snapshot</span>
+    action          <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "buy" | "sell" | "hold"</span>
+    conviction      <span class="ty">REAL</span>     NOT NULL,
+    risk_level      <span class="ty">REAL</span>     NOT NULL,
+    risk_outcome    <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "APPROVED" | "BLOCKED"</span>
+    risk_reason     <span class="ty">TEXT</span>,                          <span class="cm">-- Reason if blocked</span>
+    mode            <span class="ty">TEXT</span>     NOT NULL               <span class="cm">-- "replay" | "paper" | "live"</span>
+);
+<span class="kw">CREATE INDEX</span> idx_decisions_run_strat <span class="kw">ON</span> decisions (run_id, strategy_id);</code></pre>
+    </div>
+
+    <hr class="divider">
+
+    <h2 id="schema-trade">16. Data Schema: Trades &amp; Strategy Runs</h2>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> strategy_runs (Replay &amp; Live Sessions)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> strategy_runs (
+    run_id          <span class="ty">TEXT</span>     PRIMARY KEY,           <span class="cm">-- UUID or semantic tag (e.g. "backtest-20260925-01")</span>
+    strategy_id     <span class="ty">TEXT</span>     NOT NULL,
+    mode            <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "replay" | "paper" | "live"</span>
+    pair            <span class="ty">TEXT</span>     NOT NULL,
+    start_time      <span class="ty">TEXT</span>     NOT NULL,
+    end_time        <span class="ty">TEXT</span>,
+    initial_cash    <span class="ty">REAL</span>     NOT NULL,
+    final_value     <span class="ty">REAL</span>,
+    total_trades    <span class="ty">INTEGER</span>  DEFAULT <span class="nu">0</span>,
+    win_rate        <span class="ty">REAL</span>,
+    total_pnl_pct   <span class="ty">REAL</span>,
+    max_drawdown    <span class="ty">REAL</span>,
+    config_snapshot <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- JSON configuration</span>
+    created_at      <span class="ty">TEXT</span>     DEFAULT (datetime(<span class="st">'now'</span>))
+);</code></pre>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> paper_trades (Multi-Strategy Fills)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> paper_trades (
+    id              <span class="ty">INTEGER</span>  PRIMARY KEY AUTOINCREMENT,
+    run_id          <span class="ty">TEXT</span>     NOT NULL REFERENCES strategy_runs(run_id),
+    strategy_id     <span class="ty">TEXT</span>     NOT NULL,
+    decision_id     <span class="ty">INTEGER</span>  REFERENCES decisions(id),
+    pair            <span class="ty">TEXT</span>     NOT NULL,
+    side            <span class="ty">TEXT</span>     NOT NULL,              <span class="cm">-- "buy" | "sell"</span>
+    quantity        <span class="ty">REAL</span>     NOT NULL,
+    fill_price      <span class="ty">REAL</span>     NOT NULL,
+    fill_value_usd  <span class="ty">REAL</span>     NOT NULL,
+    fee_usd         <span class="ty">REAL</span>     NOT NULL,
+    slippage_pct    <span class="ty">REAL</span>     DEFAULT <span class="nu">0</span>,
+    entry_trade_id  <span class="ty">INTEGER</span>,
+    pnl_usd         <span class="ty">REAL</span>,                          <span class="cm">-- Set on sell</span>
+    pnl_pct         <span class="ty">REAL</span>,                          <span class="cm">-- Set on sell</span>
+    timestamp       <span class="ty">TEXT</span>     NOT NULL,
+    portfolio_value_after <span class="ty">REAL</span>
+);
+<span class="kw">CREATE INDEX</span> idx_paper_trades_run <span class="kw">ON</span> paper_trades (run_id, strategy_id);</code></pre>
+    </div>
+
+    <hr class="divider">
+
+    <h2 id="schema-portfolio">17. Data Schema: Portfolio &amp; Snapshots</h2>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> paper_portfolios (State Per Run)</div>
+      <pre><code><span class="kw">CREATE TABLE</span> paper_portfolios (
+    run_id          <span class="ty">TEXT</span>     NOT NULL,
+    strategy_id     <span class="ty">TEXT</span>     NOT NULL,
+    cash_usd        <span class="ty">REAL</span>     NOT NULL,
+    coin_quantity   <span class="ty">REAL</span>     NOT NULL DEFAULT <span class="nu">0</span>,
+    avg_entry_price <span class="ty">REAL</span>,
+    open_trade_id   <span class="ty">INTEGER</span>,
+    high_water_mark <span class="ty">REAL</span>     NOT NULL,
+    total_trades    <span class="ty">INTEGER</span>  DEFAULT <span class="nu">0</span>,
+    updated_at      <span class="ty">TEXT</span>     NOT NULL,
+    PRIMARY KEY (run_id, strategy_id)
+);</code></pre>
+    </div>
+
+    <div class="schema-block">
+      <div class="schema-header"><span class="entity">TABLE</span> portfolio_snapshots</div>
+      <pre><code><span class="kw">CREATE TABLE</span> portfolio_snapshots (
+    id              <span class="ty">INTEGER</span>  PRIMARY KEY AUTOINCREMENT,
+    run_id          <span class="ty">TEXT</span>     NOT NULL,
+    strategy_id     <span class="ty">TEXT</span>     NOT NULL,
+    timestamp       <span class="ty">TEXT</span>     NOT NULL,
+    cash_usd        <span class="ty">REAL</span>     NOT NULL,
+    coin_quantity   <span class="ty">REAL</span>     NOT NULL,
+    coin_price      <span class="ty">REAL</span>     NOT NULL,
+    total_value_usd <span class="ty">REAL</span>     NOT NULL,
+    daily_pnl_pct   <span class="ty">REAL</span>
+);
+<span class="kw">CREATE INDEX</span> idx_portfolio_snap_run <span class="kw">ON</span> portfolio_snapshots (run_id, timestamp);</code></pre>
+    </div>
+
+    <hr class="divider">
+
+    <!-- STORAGE STRATEGY -->
+    <h2 id="storage">18. Storage Strategy &amp; Local Disk Layout</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Entity</th><th>Storage Location</th><th>Retention &amp; Policy</th></tr></thead>
+        <tbody>
+          <tr><td>Historical Candles (1m)</td><td>SQLite <code>data/trading.db</code></td><td>Retained indefinitely; indexed by <code>(pair, timestamp)</code>.</td></tr>
+          <tr><td>Raw WebSocket Ticks</td><td>SQLite <code>data/trading.db</code></td><td>Pruned after 7 days to maintain lightweight database size.</td></tr>
+          <tr><td>Strategy Decisions &amp; Signals</td><td>SQLite <code>data/trading.db</code></td><td>Retained indefinitely for strategy debugging and ML evaluation.</td></tr>
+          <tr><td>Paper &amp; Live Trades</td><td>SQLite <code>data/trading.db</code></td><td>Permanent audit trail.</td></tr>
+          <tr><td>Secrets &amp; API Keys</td><td><code>.env</code></td><td>Loaded via environment; strictly never committed to git.</td></tr>
+          <tr><td>System Logs</td><td><code>logs/bot.log</code></td><td>Rotating logs (max 50MB, 5 backups).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- CLI & USAGE -->
+    <h2 id="cli-usage">19. CLI &amp; Running Modes</h2>
+    <p>The system features an intuitive CLI to switch between live paper execution and historical replay.</p>
+
+    <h3>1. Replay Multiple Strategies on Past Data (Arbitrary Start Time)</h3>
+    <pre><code><span class="cm"># Replay the last 2 days across Jev and EMA-MACD trend strategies</span>
+python main.py replay --start-time "2d" --strategies "jev,ema_macd" --pair BTC-USD
+
+<span class="cm"># Replay from an exact UTC ISO timestamp</span>
+python main.py replay --start-time "2026-09-25T00:00:00Z" --strategies "all" --initial-cash 25000</code></pre>
+
+    <h3>2. Run Paper Trading Live Stream</h3>
+    <pre><code><span class="cm"># Stream live WebSocket feed and trade with virtual paper portfolio</span>
+python main.py stream --mode paper --strategy jev --pair BTC-USD
+
+<span class="cm"># Warm up on the past 6 hours, then smoothly continue into live stream</span>
+python main.py stream --mode paper --strategy jev --catchup-from "6h"</code></pre>
+
+    <h3>3. Run Micro-Live Trading (Real Capital)</h3>
+    <pre><code><span class="cm"># Live execution with hard safety stops (max $100 per trade)</span>
+python main.py stream --mode live --strategy jev --pair BTC-USD --max-order-usd 100</code></pre>
+
+    <h3>4. Compare Historical Runs</h3>
+    <pre><code><span class="cm"># Print terminal comparison matrix across specific historical run IDs</span>
+python main.py compare --runs "run-20260925-jev,run-20260925-ema"</code></pre>
+
+    <hr class="divider">
+
+    <!-- CONFIGURATION -->
+    <h2 id="config">20. Configuration (<code>config.yaml</code>)</h2>
+    <pre><code><span class="cm"># config.yaml</span>
+system:
+  default_pair: <span class="st">"BTC-USD"</span>
+  db_path: <span class="st">"data/trading.db"</span>
+  log_path: <span class="st">"logs/bot.log"</span>
+
+features:
+  candle_lookback: <span class="nu">200</span>
+  rsi_length: <span class="nu">14</span>
+  macd_fast: <span class="nu">12</span>
+  macd_slow: <span class="nu">26</span>
+  macd_signal: <span class="nu">9</span>
+  bb_length: <span class="nu">20</span>
+  bb_std: <span class="nu">2.0</span>
+  atr_length: <span class="nu">14</span>
+
+risk:
+  min_conviction: <span class="nu">6.0</span>            <span class="cm"># Minimum score (0-10) to authorize action</span>
+  max_risk_level: <span class="nu">7.0</span>            <span class="cm"># Maximum allowed risk rating</span>
+  daily_loss_cap_pct: <span class="nu">3.0</span>        <span class="cm"># Circuit breaker halting trading for the day</span>
+  cooldown_minutes: <span class="nu">5</span>            <span class="cm"># Minimum time required between trades</span>
+  max_order_usd: <span class="nu">100.0</span>           <span class="cm"># Hard dollar cap per trade</span>
+
+paper:
+  default_cash_usd: <span class="nu">10000.0</span>
+  taker_fee_pct: <span class="nu">0.006</span>           <span class="cm"># 0.6% simulated taker fee</span>
+  slippage_pct: <span class="nu">0.0005</span>           <span class="cm"># 0.05% simulated spread</span>
+
+strategies:
+  jev:
+    api_endpoint: <span class="st">"https://api.typesafe.ai/v1/systemone"</span>
+    timeout_sec: <span class="nu">10.0</span>
+  ema_macd:
+    fast_period: <span class="nu">9</span>
+    slow_period: <span class="nu">21</span>
+  rsi_bb:
+    rsi_oversold: <span class="nu">30</span>
+    rsi_overbought: <span class="nu">70</span></code></pre>
+
+    <hr class="divider">
+
+    <!-- PROJECT STRUCTURE -->
+    <h2 id="project-structure">21. Project Structure</h2>
+    <pre><code>strat-trading-exp/
+├── .env                          <span class="cm"># API keys &amp; tokens (Coinbase, TypeSafe)</span>
+├── config.yaml                   <span class="cm"># Live tunable parameters</span>
+├── main.py                       <span class="cm"># CLI entry point (stream, replay, compare)</span>
+├── src/
+│   ├── __init__.py
+│   ├── coinbase_connector.py     <span class="cm"># WebSocket client + REST gap/history fetcher</span>
+│   ├── brain.py                  <span class="cm"># UNIFIED BRAIN: Features + Strategy + Risk Gate</span>
+│   ├── replay_engine.py          <span class="cm"># Historical Replay &amp; Multi-strategy Runner</span>
+│   ├── strategies/               <span class="cm"># Pluggable Strategy Directory</span>
+│   │   ├── __init__.py
+│   │   ├── base.py               <span class="cm"># Abstract BaseStrategy interface</span>
+│   │   ├── jev_strategy.py       <span class="cm"># TypeSafe AI Jev integration</span>
+│   │   └── technical_strategies.py <span class="cm"># EMA Trend &amp; RSI Mean-Reversion baselines</span>
+│   ├── paper_engine.py           <span class="cm"># Multi-portfolio Paper Trading Simulator</span>
+│   ├── order_executor.py         <span class="cm"># Live Coinbase REST order executor</span>
+│   ├── performance_tracker.py    <span class="cm"># Metrics, P&amp;L &amp; Multi-strategy Comparator</span>
+│   ├── monitor.py                <span class="cm"># Rich terminal UI &amp; Heartbeat Watchdog</span>
+│   ├── database.py               <span class="cm"># SQLite connection pool, migrations &amp; queries</span>
+│   └── models.py                 <span class="cm"># Pydantic data models (MarketState, Signal, etc.)</span>
+├── tests/
+│   ├── test_brain.py             <span class="cm"># Tests unified state, strategy &amp; risk pipeline</span>
+│   ├── test_replay_engine.py     <span class="cm"># Tests replay loop &amp; multi-strategy isolation</span>
+│   ├── test_paper_engine.py      <span class="cm"># Tests fill simulation, fees &amp; slippage</span>
+│   └── fixtures/                 <span class="cm"># Mock candle historical data</span>
+└── requirements.txt</code></pre>
+
+    <hr class="divider">
+
+    <!-- TESTING STRATEGY -->
+    <h2 id="testing">22. Testing &amp; Rollout Roadmap</h2>
+
+    <h3>Phase 1 — Core Unit &amp; Determinism Tests</h3>
+    <ul>
+      <li><strong>Brain Pipeline:</strong> Feed fixed candle fixtures into <code>StrategyBrain</code>. Assert exact indicator mathematical outputs, deterministic risk gating, and mock strategy dispatching.</li>
+      <li><strong>Replay Engine:</strong> Verify that historical replay starting at $T_0$ outputs strictly reproducible trade sequences and doesn't access candles at $t &gt; T$.</li>
+      <li><strong>Multi-Portfolio Isolation:</strong> Verify that two concurrent strategies maintain distinct virtual balances and trade histories without cross-contamination.</li>
+    </ul>
+
+    <h3>Phase 2 — Multi-Strategy Historical Replay (2–7 Days of Past Data)</h3>
+    <ul>
+      <li>Run historical replay on the past 48–72 hours across <code>jev_strategy</code>, <code>ema_macd_trend</code>, and <code>rsi_bb_reversion</code>.</li>
+      <li>Evaluate conviction-to-outcome correlation for Jev: check if higher conviction scores correlate with higher trade P&amp;L.</li>
+      <li>Inspect risk threshold sensitivity: tune <code>min_conviction</code> and <code>daily_loss_cap_pct</code> against historical drawdowns.</li>
+    </ul>
+
+    <h3>Phase 3 — Forward Paper Trading (3–5 Days Continuous)</h3>
+    <ul>
+      <li>Deploy bot in Paper Streaming mode on local laptop.</li>
+      <li>Confirm live WebSocket stability, automated reconnect on sleep/wake, and clean SQLite persistence.</li>
+    </ul>
+
+    <h3>Phase 4 — Micro-Live Trading ($50–100 Real Capital)</h3>
+    <ul>
+      <li>Switch mode to <code>live</code> with fixed $10 order size.</li>
+      <li>Verify real order routing, fill price precision, real Coinbase fee deductions, and daily loss circuit breaker enforcement.</li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- LIBRARY INDEX -->
+    <h2 id="libs">23. Library Index</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>coinbase-advanced-py</code></td><td>&gt;= 1.2.0</td><td>Coinbase WebSocket feed &amp; REST Advanced Trade order management</td></tr>
+          <tr><td><code>typesafe-sdk</code></td><td>&gt;= 0.3.0</td><td>TypeSafe AI / Jev System One decision queries</td></tr>
+          <tr><td><code>pandas-ta</code></td><td>&gt;= 0.3.14</td><td>Technical indicator computation (RSI, MACD, BBands, ATR)</td></tr>
+          <tr><td><code>pandas</code></td><td>&gt;= 2.2.0</td><td>Time-series candle data slicing and metrics calculation</td></tr>
+          <tr><td><code>pydantic</code></td><td>&gt;= 2.6.0</td><td>Strict typed data validation for states, signals, and configs</td></tr>
+          <tr><td><code>rich</code></td><td>&gt;= 13.7.0</td><td>Interactive terminal dashboard &amp; replay progress bars</td></tr>
+          <tr><td><code>loguru</code></td><td>&gt;= 0.7.2</td><td>Structured logging with file rotation</td></tr>
+          <tr><td><code>httpx</code></td><td>&gt;= 0.27.0</td><td>Async HTTP client for REST candle gap-filling</td></tr>
+          <tr><td><code>pyyaml</code></td><td>&gt;= 6.0.1</td><td>YAML configuration parsing</td></tr>
+          <tr><td><code>python-dotenv</code></td><td>&gt;= 1.0.1</td><td>Environment variable handling for API secrets</td></tr>
+          <tr><td><code>pytest</code> / <code>pytest-asyncio</code></td><td>&gt;= 8.0.0</td><td>Automated async unit test suite</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout success">
+      <strong>Specification v2.0 Ready:</strong> All user comments have been integrated. The architecture now unifies State Builder, Strategy Decision, and Risk Management into one component (<code>StrategyBrain</code>), supports testing any number of strategies alongside Jev, and allows running historical replay from any arbitrary start time for comparative strategy benchmarking.
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /layout -->
+
+<script>
+// Highlight active nav link based on scroll
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const navLinks = document.querySelectorAll('.nav-section a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-section a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

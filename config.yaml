@@ -1,0 +1,54 @@
+system:
+  default_pair: "BTC-USD"
+  db_path: "data/trading.db"
+  log_path: "logs/bot.log"
+  log_level: "INFO"
+
+features:
+  candle_lookback: 200
+  rsi_length: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bb_length: 20
+  bb_std: 2.0
+  atr_length: 14
+
+risk:
+  min_conviction: 6.0
+  max_risk_level: 7.0
+  daily_loss_cap_pct: 3.0
+  cooldown_minutes: 5
+  max_order_usd: 100.0
+  order_size_pct: 0.10
+
+paper:
+  default_cash_usd: 10000.0
+  taker_fee_pct: 0.006          # 0.6% taker fee
+  slippage_pct: 0.0005           # 0.05% slippage
+
+live:
+  order_size_usd: 100.0
+  max_order_size_usd: 500.0
+  timeout_sec: 30
+
+replay:
+  default_start_time: "2d"
+  step_interval_sec: 60
+  snapshot_interval_sec: 300
+
+strategies:
+  jev:
+    api_endpoint: "https://api.typesafe.ai/v1/systemone"
+    timeout_sec: 10.0
+    model: "system-one"
+  ema_macd:
+    fast_period: 9
+    slow_period: 21
+    signal_period: 9
+  rsi_bb:
+    rsi_oversold: 30
+    rsi_overbought: 70
+  momentum:
+    threshold_pct: 0.5
+    volume_factor: 1.5
