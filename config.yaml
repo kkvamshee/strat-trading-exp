@@ -24,7 +24,7 @@ risk:
 
 paper:
   default_cash_usd: 10000.0
-  taker_fee_pct: 0.006          # 0.6% taker fee
+  taker_fee_pct: 0.0008          # 0.08% taker fee
   slippage_pct: 0.0005           # 0.05% slippage
 
 live:
