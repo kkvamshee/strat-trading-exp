@@ -1,5 +1,5 @@
 system:
-  default_pair: "ZEC-USDC"
+  default_pair: "ZEC-USD"
   db_path: "data/trading.db"
   log_path: "logs/bot.log"
   log_level: "INFO"
